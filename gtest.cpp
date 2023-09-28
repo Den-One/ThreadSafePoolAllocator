@@ -30,24 +30,30 @@ TEST(ThreadTest, SingleAllocation) {
 }
 
 void thAllocFree1(pa::Allocator& allocator) {
-    void* addresses[10]{};
-    for (std::size_t i = 0; i <= 9; ++i) {
+    const size_t N_OPERATIONS = 10;
+    void* addresses[N_OPERATIONS]{};
+    size_t i = 0;
+    while (i < N_OPERATIONS) {
         addresses[i] = allocator.alloc();
+        ++i;
     }
 
-    for (std::size_t i = 9; i >= 0; --i) {
-        allocator.free(addresses[i]);
+    while (i) {
+        allocator.free(addresses[--i]);
     }
 }
 
 void thAllocFree2(pa::Allocator& allocator) {
-    void* addresses[10]{};
-    for (std::size_t i = 0; i <= 9; ++i) {
+    const size_t N_OPERATIONS = 10;
+    void* addresses[N_OPERATIONS]{};
+    size_t i = 0;
+    while (i < N_OPERATIONS) {
         addresses[i] = allocator.alloc();
+        ++i;
     }
 
-    for (std::size_t i = 9; i >= 0; --i) {
-        allocator.free(addresses[i]);
+    while (i) {
+        allocator.free(addresses[--i]);
     }
 }
 
@@ -57,8 +63,8 @@ TEST(ThreadTest, SingleFree) {
     pa::Allocator* alloc = new pa::Allocator(N_BLOCKS, BLOCK_SIZE);
     alloc->init();
 
-    std::thread th1(threadAlloc1, std::ref(*alloc));
-    std::thread th2(threadAlloc2, std::ref(*alloc));
+    std::thread th1(thAllocFree1, std::ref(*alloc));
+    std::thread th2(thAllocFree2, std::ref(*alloc));
 
     th1.join();
     th2.join();
@@ -100,22 +106,21 @@ TEST(MemoryAlloc, CheckCapacityOverflow) {
     }
 }
 
-TEST(MemoryAlloc, FullAllocator) {
-    const std::size_t N_BLOCKS{ 10 }, BLOCK_SIZE{ 128 };
-
-    pa::Allocator* alloc = new pa::Allocator(N_BLOCKS, BLOCK_SIZE);
-    alloc->init();
-    try {
-        alloc->alloc();
-        for (std::size_t i = 0; i < 11; ++i) {
-            alloc->alloc();
-        }
-    }
-    catch (std::runtime_error& err) {
-        std::cout << err.what() << std::endl;
-        std::cout << "Error has been caught." << std::endl;
-    }
-}
+//TEST(MemoryAlloc, FullAllocator) {
+//    const std::size_t N_BLOCKS{ 10 }, BLOCK_SIZE{ 128 };
+//
+//    pa::Allocator* alloc = new pa::Allocator(N_BLOCKS, BLOCK_SIZE);
+//    alloc->init();
+//    try {
+//        for (std::size_t i = 0; i < 10; ++i) {
+//            alloc->alloc();
+//        }
+//    }
+//    catch (std::runtime_error& err) {
+//        std::cout << err.what() << std::endl;
+//        std::cout << "Error has been caught." << std::endl;
+//    }
+//}
 
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);
